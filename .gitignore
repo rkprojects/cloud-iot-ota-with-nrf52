@@ -1,0 +1,42 @@
+*~
+*.o
+*.d
+*.lst
+*.test
+*.swp
+*.log
+*.hex
+*.vscode
+*.zip
+**/__pycache__/
+scripts/*.json
+scripts/*.ebin
+scripts/*.bin
+scripts/*.sh
+app/*.txt
+bootloader/*.txt
+bootloader/*.json
+**/mbr/*.bin
+**/boards/**/*.txt
+*.eww
+**/rofs_root/
+**/tests/
+**/internal_files/
+commit.sh
+format-source.sh
+
+# This exclusion is intentionally added to avoid using certificates
+# of others.
+**/rofs_generated.c
+**/aws_iot_config.h
+
+**/Debug
+**/_build
+**/.github
+# For nested .git repositories.
+**/.git
+**/cscope.*
+**/build_cscope.sh
+**/tags
+**/Icon\r
+
