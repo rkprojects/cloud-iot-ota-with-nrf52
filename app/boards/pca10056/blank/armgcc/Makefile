@@ -1,12 +1,12 @@
-PROJECT_NAME     := continuous_uarte
+PROJECT_NAME     := ota_app
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := ../../../../../..
-PROJ_DIR := ../../..
+SDK_ROOT := ../../../../../../..
+PROJ_DIR := ../../../..
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
-  LINKER_SCRIPT  := uart_gcc_nrf52.ld
+  LINKER_SCRIPT  := ota_app.ld
   
 # Available Cloud connection configurations.
 CLOUD_TARGET_AWS_GPRS_SSL 		= 0
@@ -15,7 +15,7 @@ CLOUD_TARGET_GCP_MBEDTLS_GPRS_SSL 	= 2
 CLOUD_TARGET_GCP_MBEDTLS_GPRS_TCP	= 3
 
 # Select Cloud connection configuration
-CLOUD_TARGET = $(CLOUD_TARGET_GCP_MBEDTLS_GPRS_SSL)
+CLOUD_TARGET = $(CLOUD_TARGET_AWS_GPRS_SSL)
 
   
 SRC_AWS_IOT_SDK_COMMON += \
@@ -159,7 +159,38 @@ SRC_GCP_IOT_APP += \
 INC_GCP_IOT_APP += \
 	$(PROJ_DIR)/aws-iot-device-sdk-embedded-C-3.0.1/platform/nRF52840/sim7600e \
 	$(PROJ_DIR)/aws-iot-device-sdk-embedded-C-3.0.1/external_libs/mbedTLS/include
+
+SRC_NRF_CRYPTO += \
+	$(SDK_ROOT)/components/libraries/crypto/backend/nrf_hw/nrf_hw_backend_init.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_aes.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_hash.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_init.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_mutex.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_rng.c \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310/cc310_backend_shared.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_aes.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_aes_shared.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_error.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_hash.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_init.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_rng.c \
+	$(SDK_ROOT)/components/libraries/crypto/nrf_crypto_shared.c
 	
+INC_NRF_CRYPTO += \
+	$(SDK_ROOT)/components/libraries/stack_info \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310 \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cc310_bl \
+	$(SDK_ROOT)/external/nrf_cc310/include \
+	$(SDK_ROOT)/components/libraries/crypto \
+	$(SDK_ROOT)/components/libraries/crypto/backend/nrf_hw \
+	$(SDK_ROOT)/components/libraries/crypto/backend/nrf_sw \
+	$(SDK_ROOT)/components/libraries/crypto/backend/optiga \
+	$(SDK_ROOT)/components/libraries/crypto/backend/mbedtls \
+	$(SDK_ROOT)/components/libraries/crypto/backend/oberon \
+	$(SDK_ROOT)/components/libraries/crypto/backend/micro_ecc \
+	$(SDK_ROOT)/components/libraries/crypto/backend/cifra \
+	$(SDK_ROOT)/components/libraries/mutex
+
 
 # Select optional source codes are per cloud target.
 ifeq ($(CLOUD_TARGET), $(CLOUD_TARGET_AWS_GPRS_SSL))
@@ -207,6 +238,7 @@ endif
 
 # Source files common to all targets
 SRC_FILES += \
+	$(SRC_NRF_CRYPTO) \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
@@ -249,9 +281,10 @@ SRC_FILES += \
   $(PROJ_DIR)/src/rofs_generated.c \
   $(PROJ_DIR)/src/rofs.c \
   $(PROJ_DIR)/src/cal_time.c \
+  $(PROJ_DIR)/src/ota_update.c \
   $(SRC_AWS_IOT_SDK_COMMON) \
-  $(SRC_CLOUD_TARGET)
-
+  $(SRC_CLOUD_TARGET) \
+	
 
 
 # Include folders common to all targets
@@ -259,6 +292,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(PROJ_DIR)/include \
+  $(PROJ_DIR)/../bootloader/include \
   $(PROJ_DIR)/aws-iot-device-sdk-embedded-C-3.0.1/external_libs/jsmn \
   $(PROJ_DIR)/aws-iot-device-sdk-embedded-C-3.0.1/platform/nRF52840/common \
   $(PROJ_DIR)/aws-iot-device-sdk-embedded-C-3.0.1/include \
@@ -288,12 +322,14 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/log/src \
-
+	$(INC_NRF_CRYPTO)
+	
 # Libraries common to all targets
 LIB_FILES += \
+	$(SDK_ROOT)/external/nrf_cc310/lib/cortex-m4/hard-float/libnrf_cc310_0.9.12.a
 
 # Optimization flags
-OPT = -O0 -g
+OPT = -O2 -g
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 
@@ -301,7 +337,7 @@ OPT = -O0 -g
 CFLAGS += $(OPT)
 CFLAGS += -DDEBUG
 CFLAGS += $(CFLAGS_IOT_CORE)
-CFLAGS += -DBOARD_B840_BLOCK_V1
+CFLAGS += -DBOARD_PCA10056
 CFLAGS += -DBSP_DEFINES_ONLY
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
@@ -322,7 +358,7 @@ ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-ASMFLAGS += -DBOARD_B840_BLOCK_V1
+ASMFLAGS += -DBOARD_PCA10056
 ASMFLAGS += -DBSP_DEFINES_ONLY
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
@@ -372,12 +408,9 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 # Flash the program
 flash: default
 	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
-	pyocd flash -t nrf52840 -e sector $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
-	#pyocd cmd -t nrf52840 -c reset
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
+	nrfjprog -f nrf52 --reset
     
-debug:
-	pyocd gdb -t nrf52840
-
 #erase: # don't use it for EBYTE module
 #	nrfjprog -f nrf52 --eraseall
 

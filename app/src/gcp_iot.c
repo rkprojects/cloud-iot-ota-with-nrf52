@@ -38,6 +38,7 @@ limitations under the License.
 #include "timer_interface.h"
 #include "temp_sensor.h"
 #include "ota_update.h"
+#include "version.h"
 
 #define MQTT_EVENT_TOPIC_NAME		"/devices/my-device/events"
 #define MQTT_STATE_TOPIC_NAME		"/devices/my-device/state"
@@ -73,7 +74,7 @@ void iot_subscribe_config_callback_handler(AWS_IoT_Client *pClient, char *topicN
     IOT_UNUSED(pData);
 	IOT_UNUSED(pClient);
 	IOT_INFO("FW update message received");
-	IOT_INFO("%.*s\r\n%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *) params->payload);
+	IOT_DEBUG("%.*s\r\n%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *) params->payload);
 
 
     ret = ota_update_prepare((const char *) params->payload, (int) params->payloadLen);
@@ -149,8 +150,9 @@ int gcp_iot_app(void) {
 	unsigned long jwt_calc_duration_start;
 	unsigned long jwt_calc_duration_end;
 	
-    IOT_INFO("\r\nGoogle Cloud IoT Core with");
-    IOT_INFO("AWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
+    IOT_INFO("\r\nApplication Version: %lu\r\n", APP_VERSION);
+    IOT_INFO("Google Cloud IoT Core with");
+    IOT_INFO("AWS IoT SDK Version %d.%d.%d-%s\r\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
 
 	IOT_DEBUG("rootCA %s", GCP_IOT_ROOT_CA_FILENAME);
 	

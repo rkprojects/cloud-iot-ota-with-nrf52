@@ -41,7 +41,7 @@ int hash_verify(const uint8_t* data, size_t data_len, int data_in_rom, const uin
 int hash_file_verify(const char* path, int file_len, const uint8_t* expected_hash);
 int app_verify(void);
 int start_program(void);
-int programming_required(void);
+int programming_pending(void);
 int update_bl_settings(const bl_info_t* bl_info);
 
 #endif //_PROGRAM_H_

@@ -48,7 +48,7 @@ static int programming_failed(int abort, int err_code, int prog_step);
 unsigned char prog_mem_buf_in[PROG_MEM_BUF_LENGTH];
 unsigned char prog_mem_buf_out[PROG_MEM_BUF_LENGTH];
 
-int programming_required(void)
+int programming_pending(void)
 {
     int ret = 0;
 
@@ -263,6 +263,14 @@ static void flash(uint32_t address, const uint32_t* buf, uint32_t words)
 
 int update_bl_settings(const bl_info_t* bl_info)
 {
+    int ret;
+
+    ret = memcmp(bl_info, &bl_settings, sizeof(bl_info_t));
+    if (ret == 0) // skip if same.
+    {
+        return 0;
+    }
+    
     nrf_nvmc_page_erase(BOOTLOADER_SETTINGS_PAGE_ADDR);
     nrf_nvmc_write_words(BOOTLOADER_SETTINGS_PAGE_ADDR, (const uint32_t*)bl_info, SIZE_BYTES_WORDS(sizeof(bl_info_t)));
     
@@ -273,7 +281,7 @@ static int programming_failed(int abort, int err_code, int prog_step)
 {
     bl_info_t bl_info;
     
-    memcpy(&bl_info, &bl_settings, sizeof(bl_info_t));
+    bl_info = bl_settings;
     
     bl_info.update_info.prog_step = prog_step;
 
@@ -297,8 +305,8 @@ static int programming_success(void)
 {
     bl_info_t bl_info;
     
-    memcpy(&bl_info, &bl_settings, sizeof(bl_info_t));
-    memcpy(&bl_info.fw_info, &bl_info.new_fw_info, sizeof(fw_info_t));
+    bl_info = bl_settings;
+    bl_info.fw_info = bl_settings.new_fw_info;
     memset(&bl_info.update_info, 0, sizeof(fw_update_progress_t));
     bl_info.update_info.prog_step = PROG_STEP_DONE;
     bl_info.app_start_reason = APP_START_REASON_NORMAL;

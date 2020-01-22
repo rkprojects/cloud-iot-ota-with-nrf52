@@ -135,7 +135,7 @@ int main(void)
         halt_error();
     }
 
-    ret = programming_required();
+    ret = programming_pending();
     if (ret < 0)
     {
         dbg_printf(DEBUG_LEVEL_ERROR, "programming_required failed: %d\r\n", ret);
@@ -168,8 +168,6 @@ int main(void)
         if (ret < 0)
         {
             dbg_printf(DEBUG_LEVEL_ERROR, "start_program failed: %d\r\n", ret);
-            // TODO: If error is re-attemptable then do it.
-            //halt_error();
         }
 
         // Reset MCU again else application
@@ -190,7 +188,7 @@ int main(void)
             pfn_bl_commands_t fn = BL_COMMANDS_FN_ADDR;
             bl_cmd_params_t params;
             extern int bl_commands(int cmd, bl_cmd_params_t* params);
-            memcpy(&params.fw_info, &bl_settings.fw_info, sizeof(fw_info_t));
+            params.fw_info = bl_settings.fw_info;
 
             dbg_printf(DEBUG_LEVEL_DEBUG, "Calling bl_command=%p, addr=%p\r\n", 
                             bl_commands,

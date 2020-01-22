@@ -1,4 +1,4 @@
-PROJECT_NAME     := continuous_uarte
+PROJECT_NAME     := ota_app
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 
@@ -15,7 +15,7 @@ CLOUD_TARGET_GCP_MBEDTLS_GPRS_SSL 	= 2
 CLOUD_TARGET_GCP_MBEDTLS_GPRS_TCP	= 3
 
 # Select Cloud connection configuration
-CLOUD_TARGET = $(CLOUD_TARGET_GCP_MBEDTLS_GPRS_TCP)
+CLOUD_TARGET = $(CLOUD_TARGET_AWS_GPRS_SSL)
 
   
 SRC_AWS_IOT_SDK_COMMON += \
@@ -413,10 +413,6 @@ flash: default
     
 debug:
 	pyocd gdb -t nrf52840
-
-flash_mbr:
-	@echo Flashing MBR: $(PROJ_DIR)/mbr/mbr_with_bl_addr.hex
-	pyocd flash -t nrf52840 -e sector $(PROJ_DIR)/mbr/mbr_with_bl_addr.hex
 
 #erase: # don't use it for EBYTE module
 #	nrfjprog -f nrf52 --eraseall

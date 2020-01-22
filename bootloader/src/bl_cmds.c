@@ -54,9 +54,20 @@ int bl_commands(int cmd, bl_cmd_params_t* params)
         if (ret < 0)
             return ret;
         
+        // Check for repeated programming.
+        ret = memcmp(bl_settings.fw_info.pbin_hash, params->fw_info.pbin_hash, HASH_SIZE);
+        if (ret == 0)
+        {
+            if (bl_settings.fw_info.fp_base == params->fw_info.fp_base)
+            {
+                //new image is exact copy of current one.
+                return BL_CMD_ERROR_ALREADY_PROGRAMMED;
+            }
+        }
+        
         // Accept parameters.
-        memcpy(&bl_info, &bl_settings, sizeof(bl_info_t));
-        memcpy(&bl_info.new_fw_info, &params->fw_info, sizeof(fw_info_t));
+        bl_info = bl_settings;
+        bl_info.new_fw_info = params->fw_info;
         memset(&bl_info.update_info, 0, sizeof(fw_update_progress_t));
         bl_info.update_info.update_in_progress = 1;
         ret = update_bl_settings(&bl_info);
@@ -73,6 +84,7 @@ int bl_commands(int cmd, bl_cmd_params_t* params)
     return BL_CMD_OK;
 }
 
+//basic check: contents should not be same bytes.
 static int check_array(const uint8_t* a, int len)
 {
     int i;
@@ -80,9 +92,9 @@ static int check_array(const uint8_t* a, int len)
     if (a == NULL)
         return -1;
 
-    for (i = 0; i < len; i++)
+    for (i = 1; i < len; i++)
     {
-        if (a[i])
+        if (a[i] != a[i-1])
             return 0;
     }
 

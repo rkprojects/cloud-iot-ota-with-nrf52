@@ -5,8 +5,8 @@ GROUP(-lgcc -lc -lnosys)
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x0, LENGTH = 0x100000
-  RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
+  FLASH (rx) : ORIGIN = 0x000F0000, LENGTH = 0x10000
+  RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x3E000
 }
 
 SECTIONS
@@ -39,6 +39,12 @@ SECTIONS
   .mem_section_dummy_rom :
   {
   }
+  .crypto_data :
+  {
+    PROVIDE(__start_crypto_data = .);
+    KEEP(*(SORT(.crypto_data*)))
+    PROVIDE(__stop_crypto_data = .);
+  } > FLASH
   .log_const_data :
   {
     PROVIDE(__start_log_const_data = .);
@@ -58,7 +64,12 @@ SECTIONS
     PROVIDE(__stop_nrf_balloc = .);
   } > FLASH
 
+    .bl_settings_rodata 0xFF000:
+  {
+      KEEP(*(.bl_settings_rodata))
+  }
+
 } INSERT AFTER .text
 
 
-INCLUDE "nrf_common.ld"
+INCLUDE "bootloader_common.ld"

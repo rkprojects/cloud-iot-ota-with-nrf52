@@ -5,7 +5,6 @@
 *.test
 *.swp
 *.log
-*.hex
 *.vscode
 *.zip
 **/__pycache__/
@@ -16,6 +15,7 @@ scripts/*.sh
 app/*.txt
 bootloader/*.txt
 bootloader/*.json
+bootloader/src/bl_settings_init.c
 **/mbr/*.bin
 **/boards/**/*.txt
 *.eww
@@ -29,6 +29,7 @@ format-source.sh
 # of others.
 **/rofs_generated.c
 **/aws_iot_config.h
+
 
 **/Debug
 **/_build

@@ -131,7 +131,7 @@ LIB_FILES += \
 	$(SDK_ROOT)/external/nrf_cc310/lib/cortex-m4/hard-float/libnrf_cc310_0.9.12.a
 
 # Optimization flags
-OPT = -Os -g
+OPT = -O2 -g
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 

@@ -3691,6 +3691,97 @@
 // </h> 
 //==========================================================
 
+// <h> nRF_Crypto 
+
+//==========================================================
+// <e> NRF_CRYPTO_ENABLED - nrf_crypto - Cryptography library.
+//==========================================================
+#ifndef NRF_CRYPTO_ENABLED
+#define NRF_CRYPTO_ENABLED 1
+#endif
+
+// <e> NRF_CRYPTO_BACKEND_CC310_ENABLED - Enable the ARM Cryptocell CC310 backend.
+
+// <i> The CC310 hardware-accelerated cryptography backend (only available on nRF52840).
+//==========================================================
+#ifndef NRF_CRYPTO_BACKEND_CC310_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_ENABLED 1
+#endif
+// <q> NRF_CRYPTO_BACKEND_CC310_AES_CBC_ENABLED  - Enable the AES CBC mode using CC310.
+ 
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_AES_CBC_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_AES_CBC_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_AES_CBC_MAC_ENABLED  - Enable the AES CBC_MAC mode using CC310.
+ 
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_AES_CBC_MAC_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_AES_CBC_MAC_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_AES_CMAC_ENABLED  - Enable the AES CMAC mode using CC310.
+ 
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_AES_CMAC_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_AES_CMAC_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_AES_CCM_ENABLED  - Enable the AES CCM mode using CC310.
+ 
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_AES_CCM_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_AES_CCM_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_AES_CCM_STAR_ENABLED  - Enable the AES CCM* mode using CC310.
+ 
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_AES_CCM_STAR_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_AES_CCM_STAR_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_HASH_SHA256_ENABLED  - CC310 SHA-256 hash functionality.
+ 
+
+// <i> CC310 backend implementation for hardware-accelerated SHA-256.
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_HASH_SHA256_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_HASH_SHA256_ENABLED 1
+#endif
+
+// <q> NRF_CRYPTO_BACKEND_CC310_INTERRUPTS_ENABLED  - Enable Interrupts while support using CC310.
+ 
+
+// <i> Select a library version compatible with the configuration. When interrupts are disable, a version named _noint must be used
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_INTERRUPTS_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_INTERRUPTS_ENABLED 1
+#endif
+
+#if 0
+#ifndef NRF_CRYPTO_RNG_ENABLED
+#define NRF_CRYPTO_RNG_ENABLED 0
+#endif 
+#endif
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_RNG_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_RNG_ENABLED 1
+#endif
+
+#ifndef NRF_CRYPTO_RNG_AUTO_INIT_ENABLED
+#define NRF_CRYPTO_RNG_AUTO_INIT_ENABLED 1
+#endif
+
+#ifndef NRF_CRYPTO_RNG_STATIC_MEMORY_BUFFERS_ENABLED
+#define NRF_CRYPTO_RNG_STATIC_MEMORY_BUFFERS_ENABLED 1
+#endif
+
+#ifndef NRF_CRYPTO_BACKEND_CC310_BL_HASH_SHA256_ENABLED
+#define NRF_CRYPTO_BACKEND_CC310_BL_HASH_SHA256_ENABLED 0
+#endif
+
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
 

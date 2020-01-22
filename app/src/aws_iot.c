@@ -36,25 +36,16 @@ limitations under the License.
 #include "sim7600_gprs.h"
 
 #include "ota_update.h"
+#include "version.h"
 
-
-#define MQTT_TOPIC_NAME		"topic/hello"
-#define MQTT_TOPIC_OTA_UPDATE "topic/ota_update"
+#define MQTT_TOPIC_EVENTS		"test/events"
+#define MQTT_TOPIC_OTA_UPDATE   "test/ota_update"
 
 #define TEMPERATURE_PUBLISH_INTERVAL_SECONDS	(2*60)
 
 static char msg_payload[100];
 
 static int fw_update_pending = 0;
-
-void iot_subscribe_hello_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen,
-									IoT_Publish_Message_Params *params, void *pData) {
-
-	IOT_UNUSED(pData);
-	IOT_UNUSED(pClient);
-	IOT_INFO("Subscribe callback");
-	IOT_INFO("%.*s\r\n%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *) params->payload);
-}
 
 void iot_subscribe_ota_update_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen,
 									IoT_Publish_Message_Params *params, void *pData) {
@@ -63,7 +54,7 @@ void iot_subscribe_ota_update_handler(AWS_IoT_Client *pClient, char *topicName, 
     IOT_UNUSED(pData);
 	IOT_UNUSED(pClient);
 	IOT_INFO("FW update message received");
-	IOT_INFO("%.*s\r\n%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *) params->payload);
+	IOT_DEBUG("%.*s\r\n%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *) params->payload);
 
 
     ret = ota_update_prepare((const char *) params->payload, (int) params->payloadLen);
@@ -73,7 +64,10 @@ void iot_subscribe_ota_update_handler(AWS_IoT_Client *pClient, char *topicName, 
         return;
     }
 
-    fw_update_pending = 1;
+    if (ret > 0)
+    {
+        fw_update_pending = 1;
+    }
 
 }
 
@@ -111,7 +105,8 @@ int aws_iot_app(void) {
 	
 	Timer temp_measure_timer;
 	
-	IOT_INFO("\r\nAmazon Web Services IoT Core with");
+	IOT_INFO("\r\nApplication Version: %lu\r\n", APP_VERSION);
+    IOT_INFO("Amazon Web Services IoT Core with");
 	IOT_INFO("\nAWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
 
 	IOT_DEBUG("rootCA %s", AWS_IOT_ROOT_CA_FILENAME);
@@ -162,15 +157,9 @@ int aws_iot_app(void) {
 	}
 
 	IOT_INFO("Subscribing...");
-	rc = aws_iot_mqtt_subscribe(&client, MQTT_TOPIC_NAME, strlen(MQTT_TOPIC_NAME), QOS0, iot_subscribe_hello_handler, NULL);
-	if(SUCCESS != rc) {
-		IOT_ERROR("Error subscribing : %d ", rc);
-		return rc;
-	}
-
-    rc = aws_iot_mqtt_subscribe(&client, MQTT_TOPIC_OTA_UPDATE, 
+	rc = aws_iot_mqtt_subscribe(&client, MQTT_TOPIC_OTA_UPDATE, 
                 strlen(MQTT_TOPIC_OTA_UPDATE), 
-                QOS0, 
+                QOS1, 
                 iot_subscribe_ota_update_handler, NULL);
                 
 	if(SUCCESS != rc) {
@@ -196,7 +185,7 @@ int aws_iot_app(void) {
 			sprintf(msg_payload, "Temperature: %d C\r\nTimestamp: %lu", temps_read(), timestamp);
 			paramsQOS.payloadLen = strlen(msg_payload);
 			IOT_INFO("Publishing: %s", msg_payload);
-			rc = aws_iot_mqtt_publish(&client, MQTT_TOPIC_NAME, strlen(MQTT_TOPIC_NAME), &paramsQOS);
+			rc = aws_iot_mqtt_publish(&client, MQTT_TOPIC_EVENTS, strlen(MQTT_TOPIC_EVENTS), &paramsQOS);
 			countdown_sec(&temp_measure_timer, TEMPERATURE_PUBLISH_INTERVAL_SECONDS);
 		}
 		else

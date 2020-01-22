@@ -160,7 +160,7 @@ int ota_update_run(void)
     update_enable_run = 0;
 
     bl_cmd_fn = BL_COMMANDS_FN_ADDR;
-    memcpy(&bl_params.fw_info, &fw_info, sizeof(fw_info_t));
+    bl_params.fw_info = fw_info;
 
     dbg_printf(DEBUG_LEVEL_INFO, "Calling bl_command=%p\r\n", bl_cmd_fn);
 

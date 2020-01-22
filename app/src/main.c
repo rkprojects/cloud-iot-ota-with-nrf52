@@ -235,6 +235,10 @@ int main(void)
         dbg_printf(DEBUG_LEVEL_ERROR, "NTP sync failed\r\n");
         halt_error();
     }
+
+    // TODO: Advanced feature.
+    // Check from bootloader for any failed updates.
+    // Based on error code, retry to inform the other side.
     
 #ifdef USE_AWS_IOT_CORE
     ret = aws_iot_app();
