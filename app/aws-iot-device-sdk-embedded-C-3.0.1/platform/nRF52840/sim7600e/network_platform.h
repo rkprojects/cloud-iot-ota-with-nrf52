@@ -20,8 +20,7 @@ limitations under the License.
 #define AWS_IOT_DEVICE_SDK_EMBEDDED_C_3_0_1_PLATFORM_NRF52840_SIM7600E_PLATFORM_H_
 
 typedef struct _TLSDataParams {
-	int session_id;
-}TLSDataParams;
-
+    int session_id;
+} TLSDataParams;
 
 #endif //AWS_IOT_DEVICE_SDK_EMBEDDED_C_3_0_1_PLATFORM_NRF52840_SIM7600E_PLATFORM_H_

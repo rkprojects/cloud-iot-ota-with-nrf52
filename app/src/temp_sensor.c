@@ -16,10 +16,8 @@ limitations under the License.
 
 */
 
-
-#include "nrf_temp.h"
 #include "temp_sensor.h"
-
+#include "nrf_temp.h"
 
 void temps_init(void)
 {
@@ -29,17 +27,16 @@ void temps_init(void)
 int temps_read(void)
 {
     int t;
-    
-    NRF_TEMP->TASKS_START = 1; 
 
-    while (NRF_TEMP->EVENTS_DATARDY == 0)
-    {
+    NRF_TEMP->TASKS_START = 1;
+
+    while (NRF_TEMP->EVENTS_DATARDY == 0) {
         // Do nothing. tTemp = 36 usec (typ)
     }
     NRF_TEMP->EVENTS_DATARDY = 0;
 
     // Workarounds from examples source code in nRF52 SDK
-    
+
     //PAN_028 rev2.0A anomaly 29 - TEMP: Stop task clears the TEMP register. */
     t = (nrf_temp_read() / 4);
 

@@ -16,7 +16,6 @@ limitations under the License.
 
 */
 
-
 #include "uarte.h"
 
 nrfx_err_t uarte_init(NRF_UARTE_Type* p_reg, uint32_t tx_pin, uint32_t rx_pin)
@@ -28,18 +27,18 @@ nrfx_err_t uarte_init(NRF_UARTE_Type* p_reg, uint32_t tx_pin, uint32_t rx_pin)
 
     nrf_uarte_txrx_pins_set(p_reg, tx_pin,
         rx_pin);
-    
+
     nrf_uarte_enable(p_reg);
-    
+
     return NRFX_SUCCESS;
 }
 
 //Enable uart rx in circular DMA mode.
 nrfx_err_t uarte_rx_dma_start(NRF_UARTE_Type* p_reg, uarte_modem_irq_t irq_handler, unsigned char* rx_buf, size_t buf_len)
 {
-    
+
     nrf_uarte_disable(p_reg);
-    
+
     if (nrfx_prs_acquire(p_reg, irq_handler) != NRFX_SUCCESS) {
         return NRFX_ERROR_INTERNAL;
     }
@@ -53,9 +52,9 @@ nrfx_err_t uarte_rx_dma_start(NRF_UARTE_Type* p_reg, uarte_modem_irq_t irq_handl
     NRFX_IRQ_ENABLE(nrfx_get_irq_number(p_reg));
 
     nrf_uarte_rx_buffer_set(p_reg, rx_buf, buf_len);
-    
+
     nrf_uarte_enable(p_reg);
-    
+
     nrf_uarte_shorts_enable(p_reg, NRF_UARTE_SHORT_ENDRX_STARTRX);
     nrf_uarte_task_trigger(p_reg, NRF_UARTE_TASK_STARTRX);
 

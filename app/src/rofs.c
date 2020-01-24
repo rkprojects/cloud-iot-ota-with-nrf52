@@ -16,7 +16,6 @@ limitations under the License.
 
 */
 
-
 #include <string.h>
 
 #include "rofs.h"
@@ -26,19 +25,19 @@ extern const rofs_file_info_t rofs_index_table[];
 
 int rofs_readfile(const char* filepath, const unsigned char** filemem, const rofs_file_info_t** fileinfo)
 {
-	unsigned int i;
-	
-	if ((filepath == NULL) || (filemem == NULL) || (fileinfo == NULL))
-		return -1;
-		
-	for ( i = 0; rofs_index_table[i].filepath != NULL; i++) {
-		if (strcmp(filepath, rofs_index_table[i].filepath) == 0) {
-			
-			*filemem = &rofs_data[rofs_index_table[i].index];
-			*fileinfo = &rofs_index_table[i];
-			return 0;
-		}
-	}
+    unsigned int i;
 
-	return -1;
+    if ((filepath == NULL) || (filemem == NULL) || (fileinfo == NULL))
+        return -1;
+
+    for (i = 0; rofs_index_table[i].filepath != NULL; i++) {
+        if (strcmp(filepath, rofs_index_table[i].filepath) == 0) {
+
+            *filemem = &rofs_data[rofs_index_table[i].index];
+            *fileinfo = &rofs_index_table[i];
+            return 0;
+        }
+    }
+
+    return -1;
 }

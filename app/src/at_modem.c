@@ -22,8 +22,8 @@ limitations under the License.
 #include "uart_print.h"
 
 // should be larger than packet chunk size used.
-#define UART_RX_BUFFER_SIZE     1800
-#define UART_RX_DMA_BLOCK_SIZE  1 // 1 = this will generate two interrupts per byte.
+#define UART_RX_BUFFER_SIZE 1800
+#define UART_RX_DMA_BLOCK_SIZE 1 // 1 = this will generate two interrupts per byte.
 #define LINE_DELIMIT "\r\n"
 
 static unsigned char rx_buffer[UART_RX_BUFFER_SIZE];
@@ -79,9 +79,9 @@ int at_init(void)
     if (!init_done) {
         uarte_init(uarte_modem.p_reg, UART_MODEM_TX_PIN_PSEL, UART_MODEM_RX_PIN_PSEL);
         if (uarte_rx_dma_start(uarte_modem.p_reg, uarte_modem_irq, rx_buffer,
-                    UART_RX_DMA_BLOCK_SIZE)
-                != NRFX_SUCCESS) {
-                return AT_ERROR;
+                UART_RX_DMA_BLOCK_SIZE)
+            != NRFX_SUCCESS) {
+            return AT_ERROR;
         }
         init_done = 1;
     }

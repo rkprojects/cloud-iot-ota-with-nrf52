@@ -28,5 +28,4 @@ struct Timer {
     uint32_t that_time;
 };
 
-
 #endif /* TIMER_PLATFORM_H_ */

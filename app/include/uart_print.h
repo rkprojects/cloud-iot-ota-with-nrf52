@@ -35,15 +35,16 @@ extern char console_print_buf[];
 extern char console_print_debug_level;
 
 int console_init(void);
-void console_prints(const char *str);
+void console_prints(const char* str);
 int console_fprintf(FILE* stream, const char* fmt, ...);
 
 //Added to dynamically control debug level.
 void console_set_print_debug_level(debug_level_t level);
 
-#define dbg_printf(level, ...) if ((level) <= console_print_debug_level) { \
-		    snprintf(console_print_buf, CONSOLE_PRINT_BUF_SIZE-1, __VA_ARGS__); \
-		    console_prints(console_print_buf); \
-		}
+#define dbg_printf(level, ...)                                                \
+    if ((level) <= console_print_debug_level) {                               \
+        snprintf(console_print_buf, CONSOLE_PRINT_BUF_SIZE - 1, __VA_ARGS__); \
+        console_prints(console_print_buf);                                    \
+    }
 
 #endif /* UART_PRINT_H_ */

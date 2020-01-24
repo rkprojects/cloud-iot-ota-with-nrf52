@@ -20,15 +20,14 @@ limitations under the License.
 #define ROFS_H_
 
 typedef struct {
-	const char* filepath;
-	unsigned int index; //do not use this in application.
-	unsigned int length; //without null character if added.
-	unsigned int null_added; //1 if added extra by generator.
-	const char* mime_type;
+    const char* filepath;
+    unsigned int index; //do not use this in application.
+    unsigned int length; //without null character if added.
+    unsigned int null_added; //1 if added extra by generator.
+    const char* mime_type;
 } rofs_file_info_t;
 
 //Returns 0 on success, -1 on file not found.
-int rofs_readfile(const char* filepath, const unsigned char **filemem, const rofs_file_info_t** fileinfo);
-
+int rofs_readfile(const char* filepath, const unsigned char** filemem, const rofs_file_info_t** fileinfo);
 
 #endif /* ROFS_H_ */

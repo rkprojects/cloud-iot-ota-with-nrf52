@@ -414,6 +414,10 @@ flash: default
 debug:
 	pyocd gdb -t nrf52840
 
+flash_softdevice:
+	@echo Flashing: $(SDK_ROOT)/components/softdevice/s140/hex/s140_nrf52_6.1.1_softdevice.hex
+	pyocd flash -t nrf52840 -e sector $(SDK_ROOT)/components/softdevice/s140/hex/s140_nrf52_6.1.1_softdevice.hex
+
 #erase: # don't use it for EBYTE module
 #	nrfjprog -f nrf52 --eraseall
 

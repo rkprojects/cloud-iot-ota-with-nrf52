@@ -30,20 +30,17 @@ static int check_array(const uint8_t* a, int len);
 static int check_string(const char* s, int len);
 static int check_update_fw_params(const fw_info_t* fw_info);
 
-
-__attribute__((section(".bl_cmd_fn_addr"))) 
-int bl_commands(int cmd, bl_cmd_params_t* params)
+__attribute__((section(".bl_cmd_fn_addr"))) int bl_commands(int cmd, bl_cmd_params_t* params)
 {
     int ret;
     bl_info_t bl_info;
 
     dbg_printf(DEBUG_LEVEL_DEBUG, "bl_commands %d, %p\r\n", cmd, params);
-    
+
     if (params == NULL)
         return -1;
 
-    switch (cmd)
-    {
+    switch (cmd) {
     case BL_CMD_GET_APP_START_REASON:
         params->app_start_info.app_start_reason = bl_settings.app_start_reason;
         params->app_start_info.last_error_code = bl_settings.update_info.last_error_code;
@@ -53,18 +50,16 @@ int bl_commands(int cmd, bl_cmd_params_t* params)
         ret = check_update_fw_params(&params->fw_info);
         if (ret < 0)
             return ret;
-        
+
         // Check for repeated programming.
         ret = memcmp(bl_settings.fw_info.pbin_hash, params->fw_info.pbin_hash, HASH_SIZE);
-        if (ret == 0)
-        {
-            if (bl_settings.fw_info.fp_base == params->fw_info.fp_base)
-            {
+        if (ret == 0) {
+            if (bl_settings.fw_info.fp_base == params->fw_info.fp_base) {
                 //new image is exact copy of current one.
                 return BL_CMD_ERROR_ALREADY_PROGRAMMED;
             }
         }
-        
+
         // Accept parameters.
         bl_info = bl_settings;
         bl_info.new_fw_info = params->fw_info;
@@ -73,7 +68,7 @@ int bl_commands(int cmd, bl_cmd_params_t* params)
         ret = update_bl_settings(&bl_info);
         if (ret < 0)
             return BL_CMD_ERROR_FAILED_TO_SAVE_SETTINGS;
-        
+
         // Update on chip reset to undo all application side effects.
         NVIC_SystemReset();
         break;
@@ -92,9 +87,8 @@ static int check_array(const uint8_t* a, int len)
     if (a == NULL)
         return -1;
 
-    for (i = 1; i < len; i++)
-    {
-        if (a[i] != a[i-1])
+    for (i = 1; i < len; i++) {
+        if (a[i] != a[i - 1])
             return 0;
     }
 
@@ -108,8 +102,7 @@ static int check_string(const char* s, int len)
     if (s == NULL)
         return -1;
 
-    for (i = 0; i < len; i++)
-    {
+    for (i = 0; i < len; i++) {
         if (s[i] == 0)
             break;
     }
@@ -135,13 +128,13 @@ static int check_update_fw_params(const fw_info_t* fw_info)
 
     if (fw_info->fp_base < MIN_FP_BASE_ADDRESS)
         return BL_CMD_ERROR_INVALID_PARAMS;
-    
+
     if ((fw_info->fp_base + fw_info->pbin_size) > MAX_FP_BASE_ADDRESS)
         return BL_CMD_ERROR_INVALID_PARAMS;
 
     if (fw_info->ebin_size <= 0)
         return BL_CMD_ERROR_INVALID_PARAMS;
-    
+
     if (fw_info->ebin_size > MAX_EBIN_SIZE)
         return BL_CMD_ERROR_INVALID_PARAMS;
 
@@ -161,7 +154,7 @@ static int check_update_fw_params(const fw_info_t* fw_info)
     if (ret < 0)
         return BL_CMD_ERROR_INVALID_PARAMS;
 
-    ret = check_string(fw_info->fs_path, MAX_FW_STORAGE_PATH+1);
+    ret = check_string(fw_info->fs_path, MAX_FW_STORAGE_PATH + 1);
     if (ret < 0)
         return BL_CMD_ERROR_INVALID_PARAMS;
 

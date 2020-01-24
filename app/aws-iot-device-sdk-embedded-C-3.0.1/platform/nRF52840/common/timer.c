@@ -16,15 +16,15 @@ limitations under the License.
 
 */
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "timer_interface.h"
 #include "timer_platform.h"
 
 #include "nrfx_rtc.h"
 
-#define SECONDS_TO_MS(s) ((s) * 1000U)
+#define SECONDS_TO_MS(s) ((s)*1000U)
 
 #define MAX_MS_VALUE (0xffffffU + 1)
 
@@ -32,18 +32,17 @@ static nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
 
 static uint32_t now(void);
 
-
 static uint32_t now(void)
 {
-    return nrf_rtc_counter_get (rtc.p_reg);
+    return nrf_rtc_counter_get(rtc.p_reg);
 }
 
-bool has_timer_expired(Timer *timer)
+bool has_timer_expired(Timer* timer)
 {
     return left_ms(timer) == 0;
 }
 
-void countdown_ms(Timer *timer, uint32_t expire_ms)
+void countdown_ms(Timer* timer, uint32_t expire_ms)
 {
     if (expire_ms >= MAX_MS_VALUE)
         expire_ms = MAX_MS_VALUE - 1;
@@ -52,21 +51,21 @@ void countdown_ms(Timer *timer, uint32_t expire_ms)
     timer->that_time = now(); //remember
 }
 
-void countdown_sec(Timer *timer, uint32_t expire_sec)
+void countdown_sec(Timer* timer, uint32_t expire_sec)
 {
     countdown_ms(timer, SECONDS_TO_MS(expire_sec));
 }
 
-uint32_t left_ms(Timer *timer)
+uint32_t left_ms(Timer* timer)
 {
     uint32_t time = now();
     uint32_t elapsed;
-    elapsed = (time >= timer->that_time) ? time - timer->that_time: MAX_MS_VALUE - timer->that_time + time;
-    
-    return (elapsed < timer->diff) ? timer->diff - elapsed: 0;
+    elapsed = (time >= timer->that_time) ? time - timer->that_time : MAX_MS_VALUE - timer->that_time + time;
+
+    return (elapsed < timer->diff) ? timer->diff - elapsed : 0;
 }
 
-void init_timer(Timer *timer)
+void init_timer(Timer* timer)
 {
     timer->diff = 0;
     timer->that_time = now();

@@ -18,24 +18,23 @@
 #ifndef _BL_DATA_H_
 #define _BL_DATA_H_
 
-#include <stdint.h>
 #include "bl_cmds.h"
+#include <stdint.h>
 
 //NRF error codes are postive and 16 bit.
 // error codes in bootloader are negative and
-#define NRF_ERROR_POS_TO_NEG_BASE       -131072 // -0x20000
+#define NRF_ERROR_POS_TO_NEG_BASE -131072 // -0x20000
 
-#define NRF_ERROR_TO_BL_ERROR(x)   (NRF_ERROR_POS_TO_NEG_BASE + (x))
+#define NRF_ERROR_TO_BL_ERROR(x) (NRF_ERROR_POS_TO_NEG_BASE + (x))
 
-
-#define BOOTLOADER_SETTINGS_PAGE_ADDR   0x000FF000UL
-#define BL_SETTINGS_CODE                0xABCDEF12
+#define BOOTLOADER_SETTINGS_PAGE_ADDR 0x000FF000UL
+#define BL_SETTINGS_CODE 0xABCDEF12
 
 //structs are aligned to 32 bit on this platform.
 #define SIZE_BYTES_WORDS(x) ((x) / 4)
 #define PAGE_SIZE 4096
 
-#define IS_ADDRESS_PAGE_ALIGNED(x) (!((x) & (PAGE_SIZE-1)))
+#define IS_ADDRESS_PAGE_ALIGNED(x) (!((x) & (PAGE_SIZE - 1)))
 
 // TODO: Internal Error Codes. NRF error codes are positive.
 

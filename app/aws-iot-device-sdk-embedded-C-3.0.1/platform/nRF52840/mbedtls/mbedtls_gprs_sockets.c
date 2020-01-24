@@ -28,11 +28,10 @@ limitations under the License.
 #include <stdlib.h>
 #endif
 
-
 #include "mbedtls/net_sockets.h"
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "sim7600_gprs.h"
 #include "uart_print.h"
@@ -40,7 +39,7 @@ limitations under the License.
 /*
  * Initialize a context
  */
-void mbedtls_net_init( mbedtls_net_context *ctx )
+void mbedtls_net_init(mbedtls_net_context* ctx)
 {
     ctx->fd = -1;
 }
@@ -48,66 +47,66 @@ void mbedtls_net_init( mbedtls_net_context *ctx )
 /*
  * Initiate a TCP connection with host:port and the given protocol
  */
-int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
-                         const char *port, int proto )
+int mbedtls_net_connect(mbedtls_net_context* ctx, const char* host,
+    const char* port, int proto)
 {
-	int ret;
+    int ret;
 
-	ret = gprs_connect(host, atoi(port), GPRS_GENERAL_API_TIMEOUT_MS);
-	if (ret < 0) {
-		dbg_printf(DEBUG_LEVEL_ERROR, "gprs_connect failed: %d\r\n", ret);
-		return MBEDTLS_ERR_NET_CONNECT_FAILED;
-	}
+    ret = gprs_connect(host, atoi(port), GPRS_GENERAL_API_TIMEOUT_MS);
+    if (ret < 0) {
+        dbg_printf(DEBUG_LEVEL_ERROR, "gprs_connect failed: %d\r\n", ret);
+        return MBEDTLS_ERR_NET_CONNECT_FAILED;
+    }
 
-	ctx->fd = ret;
+    ctx->fd = ret;
 
-	return 0;
+    return 0;
 }
 
 /*
  * Create a listening socket on bind_ip:port
  */
-int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char *port, int proto)
+int mbedtls_net_bind(mbedtls_net_context* ctx, const char* bind_ip, const char* port, int proto)
 {
-    (void) ctx;
-    (void) bind_ip;
-    (void) port;
-    (void) proto;
-    
+    (void)ctx;
+    (void)bind_ip;
+    (void)port;
+    (void)proto;
+
     return MBEDTLS_ERR_NET_NOT_SUPPORTED;
 }
 
 /*
  * Accept a connection from a remote client
  */
-int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
-                        mbedtls_net_context *client_ctx,
-                        void *client_ip, size_t buf_size, size_t *ip_len )
+int mbedtls_net_accept(mbedtls_net_context* bind_ctx,
+    mbedtls_net_context* client_ctx,
+    void* client_ip, size_t buf_size, size_t* ip_len)
 {
     (void)bind_ctx;
-    (void)client_ctx; 
-    (void)client_ip; 
-    (void)buf_size; 
+    (void)client_ctx;
+    (void)client_ip;
+    (void)buf_size;
     (void)ip_len;
-    
+
     return MBEDTLS_ERR_NET_NOT_SUPPORTED;
 }
 
 /*
  * Set the socket blocking
  */
-int mbedtls_net_set_block( mbedtls_net_context *ctx )
+int mbedtls_net_set_block(mbedtls_net_context* ctx)
 {
-    (void) ctx;
-	return 0;
+    (void)ctx;
+    return 0;
 }
 
 /*
  * Set the socket non-blocking
  */
-int mbedtls_net_set_nonblock( mbedtls_net_context *ctx )
+int mbedtls_net_set_nonblock(mbedtls_net_context* ctx)
 {
-    (void) ctx;
+    (void)ctx;
     return 0;
 }
 
@@ -153,59 +152,55 @@ int mbedtls_net_recv( mbedtls_net_context *ctx, unsigned char *buf, size_t len )
 /*
  * Read at most 'len' characters, blocking for at most 'timeout' ms
  */
-int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf,
-                              size_t len, uint32_t timeout_ms )
+int mbedtls_net_recv_timeout(void* ctx, unsigned char* buf,
+    size_t len, uint32_t timeout_ms)
 {
-	int ret;
-	(void) timeout_ms;
-	int fd = ((mbedtls_net_context*)ctx)->fd;
-	
-	if (timeout_ms < GPRS_MINIMUM_API_TIMEOUT_MS)
-		timeout_ms = GPRS_MINIMUM_API_TIMEOUT_MS;
+    int ret;
+    (void)timeout_ms;
+    int fd = ((mbedtls_net_context*)ctx)->fd;
 
-	ret = gprs_recv(fd, buf, len, (int) timeout_ms);
+    if (timeout_ms < GPRS_MINIMUM_API_TIMEOUT_MS)
+        timeout_ms = GPRS_MINIMUM_API_TIMEOUT_MS;
 
-	if (ret < 0)
-	{
-		if (ret == GPRS_ERROR_TIMEOUT)
-			return MBEDTLS_ERR_SSL_WANT_READ;
+    ret = gprs_recv(fd, buf, len, (int)timeout_ms);
 
-		dbg_printf(DEBUG_LEVEL_ERROR, "gprs_recv failed: %d\r\n", ret);
-		return MBEDTLS_ERR_NET_RECV_FAILED;
-	}
+    if (ret < 0) {
+        if (ret == GPRS_ERROR_TIMEOUT)
+            return MBEDTLS_ERR_SSL_WANT_READ;
 
-	return ret;
+        dbg_printf(DEBUG_LEVEL_ERROR, "gprs_recv failed: %d\r\n", ret);
+        return MBEDTLS_ERR_NET_RECV_FAILED;
+    }
+
+    return ret;
 }
 
 /*
  * Write at most 'len' characters
  */
-int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
+int mbedtls_net_send(void* ctx, const unsigned char* buf, size_t len)
 {
-	int ret;
-	int fd = ((mbedtls_net_context*)ctx)->fd;
-	
-	ret = gprs_send(fd, buf, len, GPRS_GENERAL_API_TIMEOUT_MS);
-	if (ret < 0)
-	{
-		//if (ret == GPRS_ERROR_SEND_TRY_AGAIN)
-		//	return MBEDTLS_ERR_SSL_WANT_WRITE;
+    int ret;
+    int fd = ((mbedtls_net_context*)ctx)->fd;
 
-		dbg_printf(DEBUG_LEVEL_ERROR, "gprs_send failed: %d\r\n", ret);
-		return MBEDTLS_ERR_NET_SEND_FAILED;
-	}
+    ret = gprs_send(fd, buf, len, GPRS_GENERAL_API_TIMEOUT_MS);
+    if (ret < 0) {
+        //if (ret == GPRS_ERROR_SEND_TRY_AGAIN)
+        //	return MBEDTLS_ERR_SSL_WANT_WRITE;
 
-	return ret;
+        dbg_printf(DEBUG_LEVEL_ERROR, "gprs_send failed: %d\r\n", ret);
+        return MBEDTLS_ERR_NET_SEND_FAILED;
+    }
+
+    return ret;
 }
 
 /*
  * Gracefully close the connection
  */
-void mbedtls_net_free( mbedtls_net_context *ctx )
+void mbedtls_net_free(mbedtls_net_context* ctx)
 {
     gprs_close(ctx->fd);
-    
+
     ctx->fd = -1;
 }
-
-

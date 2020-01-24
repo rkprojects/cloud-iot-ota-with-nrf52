@@ -19,16 +19,15 @@ limitations under the License.
 #ifndef AT_MODEM_H
 #define AT_MODEM_H
 
-enum AT_ERROR 
-{
+enum AT_ERROR {
     AT_OK = 0,
     AT_ERROR = -100,
 };
 
 int at_init(void);
-int at_get_raw_data(unsigned char *buf, int buf_len);
-int at_get_next_line(char *buf, int buf_len);
-int at_match_token(const char *token);
+int at_get_raw_data(unsigned char* buf, int buf_len);
+int at_get_next_line(char* buf, int buf_len);
+int at_match_token(const char* token);
 int at_send_cmd(const char* cmd);
 int at_send_data(const unsigned char* buf, int buf_len);
 int at_dump_buffer(void);

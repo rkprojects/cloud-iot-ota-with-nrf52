@@ -19,16 +19,14 @@ limitations under the License.
 #ifndef SIM7600_CONFIG_H_
 #define SIM7600_CONFIG_H_
 
-#define SIM_PIN     ""
+#define SIM_PIN ""
 
 //Add your time zones.
-#define TIME_ZONE_CODE_IST      22 //GMT+5:30 = 5.5 hours * 4 quarters
+#define TIME_ZONE_CODE_IST 22 //GMT+5:30 = 5.5 hours * 4 quarters
 
-#define TIME_ZONE_CODE_CURRENT  TIME_ZONE_CODE_IST
+#define TIME_ZONE_CODE_CURRENT TIME_ZONE_CODE_IST
 
-
-#define AT_RESP_SHORT_TIMEOUT_MS    3000
-#define AT_RESP_LONG_TIMEOUT_MS	    90000
-
+#define AT_RESP_SHORT_TIMEOUT_MS 3000
+#define AT_RESP_LONG_TIMEOUT_MS 90000
 
 #endif /* SIM7600_CONFIG_H_ */

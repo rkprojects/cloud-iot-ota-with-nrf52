@@ -28,6 +28,6 @@ typedef const char* cstring_t;
 
 int jwt_init(void);
 int jwt_pk_init(const unsigned char* key, size_t keylen);
-int jwt_create_RS256_token(cstring_t payload, string_t *otoken, size_t *token_len);
+int jwt_create_RS256_token(cstring_t payload, string_t* otoken, size_t* token_len);
 
 #endif /* JWT_H_ */

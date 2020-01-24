@@ -18,9 +18,9 @@
 #ifndef _PROGRAM_H_
 #define _PROGRAM_H_
 
+#include "bl_data.h"
 #include <stdint.h>
 #include <stdio.h>
-#include "bl_data.h"
 
 enum {
     PROG_ERROR_BASE = -30000,
@@ -31,7 +31,7 @@ enum {
     PROG_ERROR_FILEREAD_FAILED,
 };
 
-// Buffer length should a common factor of 
+// Buffer length should a common factor of
 // PAGE_SIZE and multiple of 4 and 16 bytes.
 #define PROG_MEM_BUF_LENGTH 512L
 

@@ -43,7 +43,7 @@ enum {
 enum {
     APP_START_REASON_NORMAL = 0,
     APP_START_REASON_PROG_FAILED, //if old app still available
-    
+
 };
 
 typedef struct {
@@ -51,12 +51,12 @@ typedef struct {
     uint32_t fp_base; //Flash programming base address. Aligned to page boundary.
     uint32_t pbin_size; //Plain binary size.
     uint32_t ebin_size; //Encrypted binary size.
-    uint8_t aes_key[AES_KEY_SIZE]; 
+    uint8_t aes_key[AES_KEY_SIZE];
     uint8_t aes_iv[AES_KEY_SIZE];
     uint8_t pbin_hash[HASH_SIZE]; //Plain binary SHA256 hash.
     uint8_t ebin_hash[HASH_SIZE]; //Encrypted binary SHA256 hash.
     // members from this point not included in fw_info OTA message.
-    char fs_path[MAX_FW_STORAGE_PATH+1]; //Image path in SIMCOM module filesystem.
+    char fs_path[MAX_FW_STORAGE_PATH + 1]; //Image path in SIMCOM module filesystem.
     // TODO: Add checksum for this struct.
 } fw_info_t;
 
@@ -71,10 +71,10 @@ typedef union {
 } bl_cmd_params_t;
 
 //provide fw_info_t in params
-#define BL_CMD_UPDATE_FW            0
+#define BL_CMD_UPDATE_FW 0
 #define BL_CMD_GET_APP_START_REASON 1
 
-typedef int (*pfn_bl_commands_t) (int, bl_cmd_params_t*);
+typedef int (*pfn_bl_commands_t)(int, bl_cmd_params_t*);
 
 /*
 //To call bootloader commands from application code:
