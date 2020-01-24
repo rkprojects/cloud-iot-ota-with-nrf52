@@ -14,29 +14,20 @@
 # limitations under the License.
 #
 
-import zipfile
-from zipfile import ZipFile
 import sys
 import json
 import os
 import io
 import hashlib
 import struct
-
+from intelhex import IntelHex
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 
 AES_KEY_SIZE = 16
-
-K_MANIFEST = 'manifest'
-K_SOFTDEVICE = 'softdevice'
-K_APP = 'application'
-K_BIN_FILE = 'bin_file'
-
-MANIFEST_FILE = "manifest.json"
-
+DEFAULT_MBR_SIZE = 4096
 BL_SETTINGS_CODE =  0xABCDEF12
 
 BL_SETTINGS_C_GEN = """
@@ -68,25 +59,97 @@ const bl_info_t bl_settings __attribute__((section(".bl_settings_rodata"))) = {{
 }};
 """
 
-class InvalidDFUFile(Exception):
-    def __init__(self, message):
-        self.messsage = message
+class OTAGeneratorError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
     
     def __str__(self):
-        return repr("Error: " + str(self.messsage))
+        return repr(self.message)
+
+class FWInfoWriter:
+    def __init__(self, aes_key, aes_iv, outfile=None):
+        self.pbin_size = 0
+        self.ebin_size = 0
+        
+        cipher = Cipher(algorithms.AES(aes_key),
+                        modes.CBC(aes_iv), 
+                        backend=default_backend())
+        self.encryptor = cipher.encryptor()
+        self.padder = padding.PKCS7(AES_KEY_SIZE * 8).padder()
+        self.ebin_hash = hashlib.sha256()
+        self.pbin_hash = hashlib.sha256()
+        
+        self.fobj = outfile
+
+        if outfile and isinstance(outfile, str):
+            self.fobj = open(outfile, "wb")
+        
+        self.closed = False
+     
+    def write(self, wdata):
+        self.pbin_size += len(wdata)
+        self.pbin_hash.update(wdata)
+        edata = self.encryptor.update(self.padder.update(wdata))
+        self.ebin_hash.update(edata)
+        self.ebin_size += len(edata)
+
+        if self.fobj:
+            self.fobj.write(edata)
+
+        return len(wdata)
+
+    def close(self):
+        if self.closed:
+            return
+        
+        edata = self.encryptor.update(self.padder.finalize()) + self.encryptor.finalize()
+        self.ebin_size += len(edata)
+        self.ebin_hash.update(edata)
+        
+        if self.fobj:
+            self.fobj.write(edata)
+            self.fobj.close()
+
+        self.closed = True
 
 
 class FWInfo:
-    def __init__(self, dfufile, app_version, ebin_file=None, aes_key=None, aes_iv=None):
-        if not zipfile.is_zipfile(dfufile):
-            raise InvalidDFUFile("Unknown DFU package: " + dfufile)
+    def __init__(self, app_hex_file, sd_hex_file, app_version, ebin_file=None, aes_key=None, aes_iv=None, mbr_size=DEFAULT_MBR_SIZE):
+        
+        self.ihex = IntelHex()
+        self.ihex.padding = 0x0
 
-        self.dfufile = dfufile
+        if sd_hex_file:
+            self.ihex.merge(IntelHex(sd_hex_file)) # default response to overlap is error.
+        
+        if app_hex_file:
+            self.ihex.merge(IntelHex(app_hex_file))
+        else:
+            raise OTAGeneratorError("Application hex file is required.")
+
+        # Check for MBR overlap and find fp_base.
+        start, end  = self.ihex.segments()[0] # segment 0.
+        fp_base = 0
+        if sd_hex_file is None:
+            if start < mbr_size:
+                raise OTAGeneratorError("Application overlaps with MBR {:x}.".format(mbr_size))
+            else:
+                fp_base = start
+        else:
+            if end > mbr_size:
+                raise OTAGeneratorError("Integrated MBR with softdevice is "
+                    " larger than given MBR size. {:x} > {:x}".format(end, mbr_size))
+            else:
+                fp_base = self.ihex.segments()[1][0] # start address of next segment.
+
+        self.ihex.write_hex_file("ota.hex")
+        self.ihex.tobinfile("ota.pbin", start = fp_base)
+        
+
         self.ebin_file = ebin_file
         
-        
         self.fw_info = {}
-        self.fw_info.setdefault('fp_base', 0x1000)
+        self.fw_info.setdefault('fp_base', fp_base)
         self.fw_info.setdefault('app_version', app_version)
         self.fw_info.setdefault('ebin_hash', '')
         self.fw_info.setdefault('pbin_hash', '')
@@ -109,80 +172,19 @@ class FWInfo:
         self._compute_fw_info()
 
     def _compute_fw_info(self):
-        cipher = Cipher(algorithms.AES(self.fw_info['aes_key']),
-                        modes.CBC(self.fw_info['aes_iv']), 
-                        backend=default_backend())
-        encryptor = cipher.encryptor()
-        padder = padding.PKCS7(AES_KEY_SIZE * 8).padder()
-        ebin_hash = hashlib.sha256()
-        pbin_hash = hashlib.sha256()
-
-        with ZipFile(self.dfufile) as pkg:
-            archive_members = pkg.namelist()
-            if MANIFEST_FILE not in archive_members:
-                raise InvalidDFUFile("Manifest file '{}' not found in '{}'.".format(MANIFEST_FILE, self.dfufile))
-
-            with pkg.open(MANIFEST_FILE) as manifest_fobj:
-                manifest = json.loads(manifest_fobj.read().decode('utf-8'))
-
-                
-                if self.ebin_file is None:
-                    ebin_fobj = io.BytesIO()
-                else:
-                    ebin_fobj = open(str(self.ebin_file), 'wb')
-
-                try:
-                    if K_SOFTDEVICE in manifest[K_MANIFEST]:
-                        if manifest[K_MANIFEST][K_SOFTDEVICE][K_BIN_FILE] not in archive_members:
-                            raise InvalidDFUFile("Softdevice binary '{}' not found in '{}'.".format(
-                                    manifest[K_MANIFEST][K_SOFTDEVICE][K_BIN_FILE],
-                                     self.dfufile))
-                        print("Adding softdevice binary")
-                        self.fw_info['pbin_size'] = self.fw_info['pbin_size'] + \
-                                pkg.getinfo(manifest[K_MANIFEST][K_SOFTDEVICE][K_BIN_FILE]).file_size
-
-                        with pkg.open(manifest[K_MANIFEST][K_SOFTDEVICE][K_BIN_FILE]) as pbin_fobj:
-                            #firmware sizes are reasonably small.
-                            pdata = pbin_fobj.read()
-                            pbin_hash.update(pdata)
-                            edata = encryptor.update(padder.update(pdata))
-                            ebin_hash.update(edata)
-                            ebin_fobj.write(edata)
-                    
-                    if K_APP in manifest[K_MANIFEST]:
-                        if manifest[K_MANIFEST][K_APP][K_BIN_FILE] not in archive_members:
-                            raise InvalidDFUFile("Application binary '{}' not found in '{}'.".format(
-                                    manifest[K_MANIFEST][K_APP][K_BIN_FILE],
-                                     self.dfufile))
-                        print("Adding application binary")
-                        
-                        # TODO: Get from manifest binary data file. complex?
-                        # self.fw_info['app_version'] = 
-
-                        self.fw_info['pbin_size'] = self.fw_info['pbin_size'] + \
-                                pkg.getinfo(manifest[K_MANIFEST][K_APP][K_BIN_FILE]).file_size
-                        with pkg.open(manifest[K_MANIFEST][K_APP][K_BIN_FILE]) as pbin_fobj:
-                            #firmware sizes are reasonably small.
-                            pdata = pbin_fobj.read()
-                            pbin_hash.update(pdata)
-                            edata = encryptor.update(padder.update(pdata))
-                            ebin_hash.update(edata)
-                            ebin_fobj.write(edata)
-                    
-                    edata = encryptor.update(padder.finalize()) + encryptor.finalize()
-                    ebin_hash.update(edata)
-                    ebin_fobj.write(edata)
-                    self.fw_info['ebin_size'] = ebin_fobj.tell()
-                    self.fw_info['ebin_hash'] = ebin_hash.digest()
-                    self.fw_info['pbin_hash'] = pbin_hash.digest()
-                except Exception as e:
-                    raise(e)
-                finally:
-                    ebin_fobj.close()
-
-
+        try:
+            writer = FWInfoWriter(self.fw_info['aes_key'], self.fw_info['aes_iv'], self.ebin_file)
+            self.ihex.tobinfile(writer, start = self.fw_info['fp_base'])
+            writer.close()
+            self.fw_info['pbin_size'] = writer.pbin_size
+            self.fw_info['ebin_size'] = writer.ebin_size
+            self.fw_info['ebin_hash'] = writer.ebin_hash.digest()
+            self.fw_info['pbin_hash'] = writer.pbin_hash.digest()
+        except Exception as e:
+            raise(e)
+        
         if self.fw_info['ebin_size'] == 0:
-            raise InvalidDFUFile("No binaries found in '{}'.".format(self.dfufile))
+            raise OTAGeneratorError("No output generated.")
 
     def to_nrf52_hex_string(self):
         """

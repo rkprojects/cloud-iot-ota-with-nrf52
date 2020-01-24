@@ -18,7 +18,7 @@ import sys
 import json
 import argparse
 
-from fw_info import FWInfo
+from fw_info import FWInfo, DEFAULT_MBR_SIZE
 
 class JSONBytesEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -33,6 +33,7 @@ default_ota_json_file = "ota.json"
 default_ota_bin_file = "ota.ebin"
 default_bl_settings_init_file = "../../bootloader/src/bl_settings_init.c"
 default_app_version = 0
+
 
 parser = argparse.ArgumentParser(
         description='Generate files for nRF52840 OTA updates and boot loader settings.\
@@ -58,12 +59,20 @@ parser.add_argument('-o', '--generate-ota-binary-file',
         nargs='?',
         help='Generate OTA files (JSON + Encrypted binary).\
             Optionally specify different location for the encrypted binary file. Default = ' + default_ota_bin_file)
+parser.add_argument('-s', '--softdevice-hexfile',
+        help='Add optional softdevice at the given path.')
+
+parser.add_argument('-m', '--mbr-size',
+        default=DEFAULT_MBR_SIZE,
+        type=int,
+        help='Change MBR size. Default = ' + str(DEFAULT_MBR_SIZE))
+
 parser.add_argument('-A', '--app-version',
         default=default_app_version,
         type=int,
         help='Application version. Default = ' + str(default_app_version))
 
-parser.add_argument('dfufile', metavar='dfu-package-zipfile', help="DFU package generated from 'nrfutil'.")
+parser.add_argument('app_hexfile', metavar='application_hexfile', help="Provide your application hex file path.")
 
 args = parser.parse_args()
 
@@ -92,7 +101,7 @@ if args.aes_iv:
         print("AES IV size must be 16 bytes, two hex digits per byte.")
         sys.exit(-1)
 
-fw = FWInfo(args.dfufile, args.app_version, efile, args.aes_key, args.aes_iv)
+fw = FWInfo(args.app_hexfile, args.softdevice_hexfile, args.app_version, efile, args.aes_key, args.aes_iv)
 
 if jfile:
     if args.url is None:
