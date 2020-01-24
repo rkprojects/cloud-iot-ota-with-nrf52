@@ -31,18 +31,16 @@ import mimetypes
 mimetypes.init()
 
 # files which needs to be null terminated. like PEM encoded files X506 certificates.
-null_termination_required = ['.pem', '.json']
+null_termination_required = [".pem", ".json"]
 
-
-root_dir = Path("../rofs_root")
+app_dir = Path("../../app")
+root_dir = app_dir / "rofs_root"
 if not root_dir.exists():
     print("Directory '{0}' not found. Please create it and copy required files in it.".format(str(root_dir)))
     sys.exit()
 
-src = Path("../src/rofs_generated.c")
-if not src.exists():
-   src.touch()
-    
+src = app_dir / "src/rofs_generated.c"
+   
 
 code = "/*\nAuto generated source code on " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n"
 code += "Source Directory: {}\n*/\n\n".format(str(root_dir.resolve()))

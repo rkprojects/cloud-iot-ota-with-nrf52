@@ -31,7 +31,7 @@ class JSONBytesEncoder(json.JSONEncoder):
 
 default_ota_json_file = "ota.json"
 default_ota_bin_file = "ota.ebin"
-default_bl_settings_init_file = "../bootloader/src/bl_settings_init.c"
+default_bl_settings_init_file = "../../bootloader/src/bl_settings_init.c"
 default_app_version = 0
 
 parser = argparse.ArgumentParser(

@@ -8,10 +8,10 @@
 *.vscode
 *.zip
 **/__pycache__/
-scripts/*.json
-scripts/*.ebin
-scripts/*.bin
-scripts/*.sh
+scripts/**/*.json
+scripts/**/*.ebin
+scripts/**/*.bin
+scripts/**/*.sh
 app/*.txt
 bootloader/*.txt
 bootloader/*.json

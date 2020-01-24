@@ -6,20 +6,19 @@ This example project builds upon the previous [GitHub project](https://github.co
 
 # Development Board
 
-Any nRF52840 based custom board or Nordic Semiconductor's offical [nRF52840 DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK) will work. The project uses only the first two BSP LEDs (trivial indication) and two UARTE instances: one for debug output on usb to serial converter and second one for AT modem. For UART, only the Tx,Rx pins are used, no hardware flow control. 
+Any nRF52840 based custom board or Nordic Semiconductor's offical [nRF52840 DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK) will work. The project uses only two UARTE instances: one for debug output on usb to serial converter and second one for AT modem. For UART, only the Tx,Rx pins are used, no hardware flow control. 
 
-As of now I have tested this project on my simple custom board based on EBYTE E73-2G4M08S1C module + pyOCD + any [CMSIS-DAP Debug Unit](https://github.com/rkprojects/openlink-v1-cmsis-dap) + Ubuntu 16.04 LTS. If you are also going to use EBYTE module then please note that it is locked by default and should be unlocked with either openocd or (nrfjprog + jlink).
+This project on my simple custom board based on EBYTE E73-2G4M08S1C module + pyOCD + any [CMSIS-DAP Debug Unit](https://github.com/rkprojects/openlink-v1-cmsis-dap) + Ubuntu 16.04 LTS. If you are also going to use EBYTE module then please note that it is locked by default and should be unlocked with either openocd or (nrfjprog + jlink).
 
 # Get Source Code
 
 `$ git clone https://github.com/rkprojects/cloud-iot-ota-with-nrf52.git`  
-`$ cd cloud-iot-ota-with-nrf52`
 
 # Configure Project
 
-Project builds with just a single Makefile similar to nRF52 SDK examples with armgcc. SES IDE is not used as it will be restricted to jlink.
+Project builds with Makefile similar to nRF52 SDK examples with armgcc. SES IDE is not used as it will be restricted to jlink.
 
-Project is comprised of two sub projects: *bootloader* and *app*. Each sub project includes two board options, like:  
+Project is comprised of two sub projects: *bootloader* and *app* (Sample application). Each sub project includes two board options, like:  
 
 * *app/boards/b840_block* - Custom board.  
 * *app/boards/pca10056* - Offical DK board.  
@@ -88,19 +87,18 @@ to your project.
 Certificates and any other arbitrary file types are stored in a simple read only file system as part of the code (const char array):  
 
 * Create root directory to store files for read only file system:  
-    `$ cd app`  
+    `$ cd cloud-iot-ota-with-nrf52/app`  
     `$ mkdir rofs_root`  
 * Copy all the certificates in PEM or CRT/DER format in this or its sub directory. Any number
 of files can be added, limited by flash size. File paths in source code begins from '/' character. Example, If a file named *aws-root-ca.pem* is copied to *app/rofs_root/certs* directory, in source code its path will be */certs/aws-root-ca.pem*
 * Generate the file system:  
-`$ cd app/scripts`  
-`$ python3 generate_rofs.py`  
+`$ cd cloud-iot-ota-with-nrf52/scripts/rofs`  
+`$ python3 main.py`  
 
 
 ## Configure IoT Settings
 
-Settings of AWS and GCP are configured in *app/include/aws_iot_config.h*. This file is git ignored for security.     
-Default *app/include/_aws_iot_config.h* is included in repo. Copy-rename and configure it before compiling.   
+Settings of AWS and GCP are configured in *app/include/aws_iot_config.h*. This file is git ignored for security reasons, instead  *app/include/_aws_iot_config.h* is included in repo. Copy-rename and configure it before compiling.   
 If using GCP, use their long term domain host *mqtt.2030.ltsapis.goog* and convert and concatenate primary, backup Root CA certificate into one PEM file.
 
 # Build and Run
@@ -109,23 +107,36 @@ This is tricky. Three binaries go into flash: *MBR (once), Bootloader* and *Appl
 Modified MBR is included in the repository which contains the start address of the Bootloader.  
 Bootloader needs a valid application in flash and for that it needs to know its hash.  
 
-Application can be with or without softdevice, bootloader is not dependent on softdevice. However the start address  (for now) is assumed to be **0x1000**. Since softdevice itself contains a MBR it needs to be handled correctly, to do that [nrfutil](https://www.nordicsemi.com/Software-and-tools/Development-Tools/nRF-Util) is required to generate DFU package from target application binaries. The generated DFU package should contain either Application or Softdevice + Application.
+Application can be with or without softdevice, bootloader is not dependent on softdevice. The start address for application in flash, for now, is assumed to be **0x1000**. Since softdevice itself contains a MBR it needs to be handled correctly, to do that [nrfutil](https://www.nordicsemi.com/Software-and-tools/Development-Tools/nRF-Util) is reused to generate DFU package from target application binaries. The generated DFU package should contain either Application or Softdevice + Application.
+
+## OTA Update Files
+
+OTA update needs two files:
+
+* *JSON* message file whose content should be sent as it is from AWS IoT Core MQTT test client or GCP IoT Core *Update Config* message. This is a sensitive file, once it is sent over secure MQTT channel and its purpose is over, it should be destroyed.
+* Encrypted binary file that you need to host on any cloud storage or CDN and publicly accessible from HTTP or HTTPS URL, no redirects. Encryption algorithm used with AES 128bit in CBC mode with PKCS7 padding and hashing is with SHA256.
+
+These two files are generated with a python program in *cloud-iot-ota-with-nrf52/scripts/ota*. By default generated OTA files are named as: *ota.json* and *ota.ebin*, you can name them differently. This program also optionally generates bootloader settings page which is required when updating the application with a debugger. For more details on command line options:
+
+`$ cd cloud-iot-ota-with-nrf52/scripts/ota`  
+`$ python3 main.py -h`  
 
 
 ## Build Sample Application
 
-`$ cd app/boards/pca10056/blank/armgcc`  
+`$ cd cloud-iot-ota-with-nrf52/app/boards/pca10056/blank/armgcc`  
 `$ make`  
 
 Build will fail if read-only filesystem is not generated or IoT settings are not configured.
 
 `$ make flash`  
 
-Flash programming must be sector wise else other areas will get erased.  
-Generate Application DFU package. Go to top level cloned directory.  
+**NOTE**:Flash erase must be sector wise else other areas will get erased.  
 
-`$ cd scripts`  
-`$ nrfutil pkg generate --application ../app/boards/pca10056/blank/armgcc/_build/nrf52840_xxaa.hex 
+
+Generate Application DFU package.  
+`$ cd cloud-iot-ota-with-nrf52/scripts/ota`  
+`$ nrfutil pkg generate --application ../../app/boards/pca10056/blank/armgcc/_build/nrf52840_xxaa.hex 
 --application-version 0 --hw-version 52 --sd-req 0 ota_app.zip`
 
 
@@ -133,11 +144,11 @@ Generate Application DFU package. Go to top level cloned directory.
 
 Bootloader needs to know about newly flashed application. This step is only required for local deployment i.e. while flashing the application with debugger. 
 
-`$ cd scripts`  
+`$ cd cloud-iot-ota-with-nrf52/scripts/ota`  
 `$ python3 main.py ota_app.zip -b`
 
 
-`$ cd bootloader/boards/pca10056/blank/armgcc`  
+`$ cd cloud-iot-ota-with-nrf52/bootloader/boards/pca10056/blank/armgcc`  
 `$ make`  
 
 Flash Bootloader.  
@@ -150,33 +161,25 @@ Connect to debug console with any serial port tools like Cutecom or Minicom to v
 
 ## Generate OTA Update Files
 
-OTA update needs two files:
-
-* *JSON* message file whose content should be sent as it is from AWS IoT Core MQTT test client or GCP IoT Update Config message. This is a sensitive file, once it is sent over secure MQTT channel and its purpose is over, destroy it.
-* Encrypted binary file that you need to host on any cloud storage/cdn and publicly accessible from HTTP or HTTPS URL, no redirects.
-
 The sample application is versioned, it won't accept old firmware version over MQTT. To try out OTA, increment version number in *app/include/version.h*. Follow the *Application* build steps described earlier except flashing. Bootloader build is not required here because this is OTA update not local update.
 
-`$ cd scripts`  
+`$ cd cloud-iot-ota-with-nrf52/scripts/ota`  
 
 Let's assume new application version number is 5, supply it with -A command line option. Upto two URLs (primary and alternate) can be supplied for OTA update.  
 `$ python3 main.py -j -A 5 -u https://storage.googleapis.com/xyz/ota.ebin 
 -a http://host.any/ota.ebin ota_app.zip`  
 
-By default generated OTA files are named as: *ota.json* and *ota.ebin*. You could name them differently, for more details on command line options:  
-`$ python3 main.py -h`  
-
-Upload the *ota.ebin* file to the above URLs.
+By default generated OTA files are named as: *ota.json* and *ota.ebin*. Upload the *ota.ebin* file to the above URLs.
 
 ## OTA Update with AWS IoT Core
 
-Application subscribes to topic *test/ota_update*. From AWS IoT Console, connect to MQTT bridge with its test client.
+Sample application subscribes to topic *test/ota_update*. From AWS IoT Console, connect to MQTT bridge with its in-built MQTT test client.
 Publish *ota.json* file contents to topic *test/ota_update*. 
 Watch the OTA update process on UART debug console.
 
 ## OTA Update with GCP IoT Core
 
-For GCP, assuming your device name is *my-device*, application subscribes to topic */devices/my-device/config*. 
+For GCP, assuming your IoT device name is *my-device*, application subscribes to topic */devices/my-device/config*. 
 From GCP IoT Console, for your device click on *Update Config* and send *ota.json* as *text* to the device. 
 Watch the OTA update process on UART debug console.
 
@@ -186,6 +189,7 @@ Watch the OTA update process on UART debug console.
 * nRF52840 UARTE EasyDMA does not have any realtime way of indicating how much data has been transferred for circular mode use case. Currently circular data transfer progress is implemented with interrupts, but it is inefficient. A more efficient implementation with Programmable peripheral interconnect (PPI) + Timer/Counter is pending.
 * For Cloud Target **CLOUD_TARGET_GCP_MBEDTLS_GPRS_SSL**, SIM7600E SSL AT Commands fails in TLS handshake stage for ECC keys when server authentication is enabled.
 * For any **xxx_GPRS_SSL** cloud targets once a SSL socket is opened or closed, SIM7600E fails to download file over HTTPS connection. Use HTTP URL or **xxx_MBEDTLS_GPRS_TCP** cloud targets for HTTPS URLs.
+* Reading entire large file in small chunks from SIM7600E fails sometimes. But the bootloader is robust enough to resume update process from last failure point across resets.
 
 
 # License
