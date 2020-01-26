@@ -28,6 +28,10 @@ from cryptography.hazmat.primitives import padding
 
 AES_KEY_SIZE = 16
 DEFAULT_MBR_SIZE = 4096
+
+# PyOCD fills segment holes with zeros.
+DEFAULT_PADDING = 0x00
+
 BL_SETTINGS_CODE =  0xABCDEF12
 
 BL_SETTINGS_C_GEN = """
@@ -114,10 +118,10 @@ class FWInfoWriter:
 
 
 class FWInfo:
-    def __init__(self, app_hex_file, sd_hex_file, app_version, ebin_file=None, aes_key=None, aes_iv=None, mbr_size=DEFAULT_MBR_SIZE):
+    def __init__(self, app_hex_file, sd_hex_file, app_version, ebin_file=None, aes_key=None, aes_iv=None, mbr_size=DEFAULT_MBR_SIZE, padding=DEFAULT_PADDING):
         
         self.ihex = IntelHex()
-        self.ihex.padding = 0x0
+        self.ihex.padding = padding & 0xff
 
         if sd_hex_file:
             self.ihex.merge(IntelHex(sd_hex_file)) # default response to overlap is error.
@@ -142,8 +146,8 @@ class FWInfo:
             else:
                 fp_base = self.ihex.segments()[1][0] # start address of next segment.
 
-        self.ihex.write_hex_file("ota.hex")
-        self.ihex.tobinfile("ota.pbin", start = fp_base)
+        # self.ihex.write_hex_file("ota.hex")
+        # self.ihex.tobinfile("ota.pbin", start = fp_base)
         
 
         self.ebin_file = ebin_file

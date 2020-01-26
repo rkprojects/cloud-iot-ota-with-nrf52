@@ -410,7 +410,14 @@ flash: default
 	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
 	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
 	nrfjprog -f nrf52 --reset
-    
+
+flash_softdevice: 
+	@echo Flashing: $(SDK_ROOT)/components/softdevice/s140/hex/s140_nrf52_6.1.1_softdevice.hex
+	nrfjprog -f nrf52 --program $(SDK_ROOT)/components/softdevice/s140/hex/s140_nrf52_6.1.1_softdevice.hex --sectorerase
+
+bootloader_settings: default
+	python3 $(PROJ_DIR)/../scripts/ota/main.py -b $(PROJ_DIR)/../bootloader/src/bl_settings_init.c $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
+
 #erase: # don't use it for EBYTE module
 #	nrfjprog -f nrf52 --eraseall
 

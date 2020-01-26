@@ -18,7 +18,7 @@ import sys
 import json
 import argparse
 
-from fw_info import FWInfo, DEFAULT_MBR_SIZE
+from fw_info import FWInfo, DEFAULT_MBR_SIZE, DEFAULT_PADDING
 
 class JSONBytesEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -67,12 +67,18 @@ parser.add_argument('-m', '--mbr-size',
         type=int,
         help='Change MBR size. Default = ' + str(DEFAULT_MBR_SIZE))
 
+parser.add_argument('-p', '--padding-value',
+        default=DEFAULT_PADDING,
+        type=int,
+        help='Padding values to use in between segments. '
+                'Default = 0x{:x} as used by PyOCD'.format(DEFAULT_PADDING))
+
 parser.add_argument('-A', '--app-version',
         default=default_app_version,
         type=int,
         help='Application version. Default = ' + str(default_app_version))
 
-parser.add_argument('app_hexfile', metavar='application_hexfile', help="Provide your application hex file path.")
+parser.add_argument('app_hexfile', metavar='application-hexfile', help="Provide your application hex file path.")
 
 args = parser.parse_args()
 
@@ -101,7 +107,9 @@ if args.aes_iv:
         print("AES IV size must be 16 bytes, two hex digits per byte.")
         sys.exit(-1)
 
-fw = FWInfo(args.app_hexfile, args.softdevice_hexfile, args.app_version, efile, args.aes_key, args.aes_iv)
+fw = FWInfo(args.app_hexfile, args.softdevice_hexfile, 
+            args.app_version, efile, args.aes_key, args.aes_iv,
+            args.padding_value)
 
 if jfile:
     if args.url is None:
