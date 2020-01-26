@@ -187,7 +187,7 @@ Watch the OTA update process on UART debug console.
 
 # License
 
-Copyright 2019 Ravikiran Bukkasagara <contact@ravikiranb.com>
+Copyright 2020 Ravikiran Bukkasagara <contact@ravikiranb.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
