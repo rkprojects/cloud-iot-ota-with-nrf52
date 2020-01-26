@@ -8,7 +8,7 @@ This example project builds upon the previous [GitHub project](https://github.co
 
 Any nRF52840 based custom board or Nordic Semiconductor's offical [nRF52840 DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK) will work. The project uses only two UARTE instances: one for debug output on usb to serial converter and second one for AT modem. For UART, only the Tx,Rx pins are used, no hardware flow control. 
 
-This project on my simple custom board based on EBYTE E73-2G4M08S1C module + pyOCD + any [CMSIS-DAP Debug Unit](https://github.com/rkprojects/openlink-v1-cmsis-dap) + Ubuntu 16.04 LTS. If you are also going to use EBYTE module then please note that it is locked by default and should be unlocked with either openocd or (nrfjprog + jlink).
+This project is tested on my simple custom board based on EBYTE E73-2G4M08S1C module + pyOCD + any [CMSIS-DAP Debug Unit](https://github.com/rkprojects/openlink-v1-cmsis-dap) + Ubuntu 16.04 LTS. If you are also going to use EBYTE module then please note that it is locked by default and should be unlocked with either openocd or (nrfjprog + jlink).
 
 # Get Source Code
 
@@ -36,7 +36,7 @@ Set **SDK_ROOT** variable to either absolute or relative path of nRF5 SDK. (Test
 Repeat this step for *bootloader* project too.
 
 
-### Select Cloud Target
+### Select Cloud Target for the Application
 
 There are four possible combinations:
 
